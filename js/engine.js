@@ -172,8 +172,24 @@ var Engine = (function(global) {
         'images/stone-block.png',
         'images/water-block.png',
         'images/grass-block.png',
-        'images/enemy-bug.png',
-        'images/char-boy.png'
+        'images/enemy-bug-0.png',
+        'images/enemy-bug-1.png',
+        'images/enemy-bug-2.png',
+        'images/enemy-bug-3.png',
+        'images/enemy-bug-4.png',
+        'images/enemy-bug-5.png',
+        'images/enemy-bug-6.png',
+        'images/enemy-bug-7.png',
+        'images/enemy-bug-8.png',
+        'images/enemy-bug-9.png',
+        'images/enemy-bug-10.png',
+        'images/enemy-bug-11.png',
+        'images/enemy-bug-12.png',
+        'images/char-boy.png',
+        'images/char-cat-girl.png',
+        'images/char-horn-girl.png',
+        'images/char-pink-girl.png',
+        'images/char-princess-girl.png',
     ]);
     Resources.onReady(init);
 

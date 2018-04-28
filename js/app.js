@@ -23,7 +23,7 @@ const model = {
 
         const Enemy = function() {
             model.enemies.randomize(this);
-            this.sprite = model.enemies.sprite;
+            this.sprite = model.enemies.getRandomSprite();
         };
 
         Enemy.prototype.update = function(dt) {
@@ -44,7 +44,7 @@ const model = {
         const Player = function() {
             this.x = model.game.boundaries.centerX;
             this.y = model.game.boundaries.bottom;
-            this.sprite = model.player.sprites[0];
+            this.sprite = model.player.getRandomSprite();
         };
 
         Player.prototype.update = function(dt) {
@@ -105,7 +105,25 @@ const model = {
             max: null,
             increaseAmount: 100
         },
-        sprite: 'images/enemy-bug.png',
+        sprite: 'images/enemy-bug-0.png',
+        sprites: [
+            'images/enemy-bug-0.png',
+            'images/enemy-bug-1.png',
+            'images/enemy-bug-2.png',
+            'images/enemy-bug-3.png',
+            'images/enemy-bug-4.png',
+            'images/enemy-bug-5.png',
+            'images/enemy-bug-6.png',
+            'images/enemy-bug-7.png',
+            'images/enemy-bug-8.png',
+            'images/enemy-bug-9.png',
+            'images/enemy-bug-10.png',
+            'images/enemy-bug-11.png',
+            'images/enemy-bug-12.png',
+        ],
+        getRandomSprite: function () {
+            return model.enemies.sprites[_.random(0, model.enemies.sprites.length - 1)];
+        },
         getRandomStartPositionY: function() {
             return _.random(model.enemies.position.minY, model.enemies.position.maxY);
         },
@@ -142,7 +160,7 @@ const model = {
             'images/char-princess-girl.png'
         ],
         getRandomSprite: function() {
-            return this.player.sprites[_.random(0, this.player.sprites.length - 1)];
+            return model.player.sprites[_.random(0, model.player.sprites.length - 1)];
         }
     },
 

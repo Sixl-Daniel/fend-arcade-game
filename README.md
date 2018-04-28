@@ -5,6 +5,7 @@
 **PERKS**
 - Use of audio files for events
 - Game is changing speed of background audio with every round
+- Random enemy and player sprites
 
 ## Getting started
 
