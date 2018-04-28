@@ -1,6 +1,10 @@
 # Classic Arcade Game Clone :space_invader:
 
-A practice project for the Udacity Front End Web Developer Nanodegree Program
+*A practice project for the Udacity Front End Web Developer Nanodegree Program*
+
+**PERKS**
+- Use of audio files for events
+- Game is changing speed of background audio with every round
 
 ## Getting started
 
