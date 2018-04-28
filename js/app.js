@@ -19,7 +19,7 @@ const model = {
          * character entities
          */
 
-        /* enemies */
+        // enemies
 
         const Enemy = function() {
             model.enemies.randomize(this);
@@ -39,7 +39,7 @@ const model = {
             ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
         };
 
-        /* player */
+        // player
 
         const Player = function() {
             this.x = model.game.boundaries.centerX;
@@ -280,19 +280,19 @@ const controller = {
 const view = {
     init: function () {
 
-        /* store pointers to DOM elements */
+        // store pointers to DOM elements
 
         this.lives = document.querySelector('.lives');
         this.round = document.querySelector('.round');
         this.roundsMax = document.querySelector('.roundsMax');
 
-        /* add event listeners */
+        // add event listeners
 
         document.addEventListener('keyup', function (e) {
             player.handleInput(model.game.allowedKeys[e.keyCode]);
         });
 
-        /* prepare audio */
+        // prepare audio
 
         const audioPath = './audio/';
 
@@ -318,11 +318,11 @@ const view = {
             })
         };
 
-        /* render all elements on init */
+        // render all elements on init
 
         this.renderAll();
 
-        /* fade in background music on start */
+        // fade in background music on start
 
         this.sounds['background'].fade(0, 0.3, 6000);
 
@@ -349,7 +349,7 @@ const view = {
     },
 
     /*
-     * audio functions
+     * miscellaneous functions
      */
 
     resetSpeedMusic: function () {
@@ -364,13 +364,11 @@ const view = {
 
 controller.init();
 
-
-
 /*
  * HELPER FUNCTIONS
  */
 
-// shuffle function from http://stackoverflow.com/a/2450976
+/* shuffle function from http://stackoverflow.com/a/2450976 */
 
 function shuffle(array) {
     var currentIndex = array.length,
@@ -411,7 +409,3 @@ function removeClass(el, className) {
         el.className = el.className.replace(reg, ' ');
     }
 }
-
-
-
-
