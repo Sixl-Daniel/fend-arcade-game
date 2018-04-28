@@ -296,10 +296,9 @@ const view = {
 
         /* prepare audio */
 
-        const audioPath = '../audio/';
+        const audioPath = './audio/';
 
         this.sounds = {
-            path: '../audio/',
             step: new Howl({
                 src: [audioPath + 'step.webm', audioPath + 'step.mp3', audioPath + 'step.wav'],
             }),
