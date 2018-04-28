@@ -18,17 +18,17 @@ Download the latest stable release from [https://nodejs.org/](https://nodejs.org
 
 2. **Install http-server from npm**  
 Install the package *http-server* globally with the node package manager command line tool. Open a command prompt and enter:
-    ```console
+    ```
     $ npm install http-server -g
     ```
 3. **Clone this repository**  
 Change to a folder you want the game in. Then clone the files of this repo to a new directory and changee into it:
-    ```console
+    ```
     $ git clone https://github.com/Sixl-Daniel/fend-arcade-game.git MyNewGameDirectory
     $ cd MyNewGameDirectory
     ```
 3. **Start your web server**
-    ```console
+    ```
     http-server
     ```
 5. **Point your browser to your local website**  
@@ -49,7 +49,7 @@ Version: 2.0.9 / [https://howlerjs.com/](https://howlerjs.com/)
 - **Font Awesome**  
 Version: v5.0.9 / [https://fontawesome.com/](https://fontawesome.com/)
 
-- **Google Fonts — Press Start 2P**
+- **Google Fonts — Press Start 2P**  
 https://fonts.google.com/specimen/Press+Start+2P
 ### Audio
 
@@ -81,5 +81,5 @@ Background by [SVGBackgrounds.com](https://www.svgbackgrounds.com/)
 - **Class helpers**  
 [https://jaketrent.com/post/addremove-classes-raw-javascript/](https://jaketrent.com/post/addremove-classes-raw-javascript/)
 
-- **NodeJS - Setup a Simple HTTP Server / Local Web Server**
+- **NodeJS - Setup a Simple HTTP Server / Local Web Server**  
 [http://jasonwatmore.com/post/2016/06/22/nodejs-setup-simple-http-server-local-web-server](http://jasonwatmore.com/post/2016/06/22/nodejs-setup-simple-http-server-local-web-server)
