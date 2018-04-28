@@ -1,3 +1,53 @@
+html,
 body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: #333;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 800'%3E%3Cg %3E%3Ccircle fill='%23000000' cx='400' cy='400' r='600'/%3E%3Ccircle fill='%2318192a' cx='400' cy='400' r='500'/%3E%3Ccircle fill='%23262a4f' cx='400' cy='400' r='400'/%3E%3Ccircle fill='%23343d78' cx='400' cy='400' r='300'/%3E%3Ccircle fill='%234151a4' cx='400' cy='400' r='200'/%3E%3Ccircle fill='%234e66d2' cx='400' cy='400' r='100'/%3E%3C/g%3E%3C/svg%3E");
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
     text-align: center;
+    font-family: Frutiger, "Frutiger Linotype", Univers, Calibri, "Gill Sans", "Gill Sans MT", "Myriad Pro", Myriad, "DejaVu Sans Condensed", "Liberation Sans", "Nimbus Sans L", Tahoma, Geneva, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.panel {
+    font-family: 'Press Start 2P';
+    color: #FFF;
+    border: 2px solid #FFF;
+    margin: 0;
+    padding: 1em 2em;
+}
+
+.lives {
+    color: rgb(251, 23, 7);
+    font-size: 20px;
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    display: flex;
+    justify-content: center;
+}
+
+.lives li {
+    padding: 0 1px;
+    margin: 0;
+    transition: color 400ms linear;
+}
+
+.lives.lives--count-2 .heart-3,
+.lives.lives--count-1 .heart-3,
+.lives.lives--count-1 .heart-2,
+.lives.lives--count-0 .heart-3,
+.lives.lives--count-0 .heart-2,
+.lives.lives--count-0 .heart-1 {
+   color: rgba(29, 22, 21, 0.39);
 }

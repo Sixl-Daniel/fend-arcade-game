@@ -6,6 +6,15 @@ const model = {
     
     init: function() {
 
+        /*
+         * set initial model values
+         */
+
+        this.game.round = this.game.roundInitial;
+        this.player.lives = this.player.livesInitial;
+        this.enemies.speed.min = this.enemies.speed.minInitial;
+        this.enemies.speed.max = this.enemies.speed.maxInitial;
+
         /* 
          * character entities
          */
@@ -22,7 +31,7 @@ const model = {
                 model.enemies.randomize(this);
             } else {
                 this.x += this.speed * dt;
-                model.enemies.checkIfPlayerTooClose(this.x, this.y);
+                model.enemies.checkPlayerPosition(this.x, this.y);
             }
         };
 
@@ -40,6 +49,7 @@ const model = {
 
         Player.prototype.update = function(dt) {
             this.speed * dt;
+            // console.log(this.x + ' | ' + this.y);
         };
 
         Player.prototype.render = function() {
@@ -49,14 +59,17 @@ const model = {
         Player.prototype.handleInput = function(direction) {
             if (direction == 'left' && this.x > model.game.boundaries.left) {
                 this.x -= model.player.step;
+                controller.playerHasMoved();
             } else if (direction == 'right' && this.x < model.game.boundaries.right) {
                 this.x += model.player.step;
+                controller.playerHasMoved();
             } else if (direction == 'up' && this.y > model.game.boundaries.top) {
                 this.y -= model.player.step;
+                controller.playerHasMoved();
             } else if (direction == 'down' && this.y < model.game.boundaries.bottom) {
                 this.y += model.player.step;
+                controller.playerHasMoved();
             }
-            // console.log("x: " + this.x + " | y: " + this.y);
         };
 
         /* 
@@ -77,7 +90,7 @@ const model = {
     },
 
     enemies: {
-        number: 6,
+        number: 12,
         position: {
             startX: -105,
             endX: 505,
@@ -87,8 +100,11 @@ const model = {
             maxY: 300
         },
         speed: {
-            min: 30,
-            max: 270
+            minInitial: 40,
+            maxInitial: 160,
+            min: null,
+            max: null,
+            increaseAmount: 100
         },
         sprite: 'images/enemy-bug.png',
         getRandomStartPositionY: function() {
@@ -105,17 +121,19 @@ const model = {
             object.y = model.enemies.getRandomStartPositionY();
             object.speed = model.enemies.getRandomSpeed();
         },
-        checkIfPlayerTooClose: function(x, y) {
+        checkPlayerPosition: function(x, y) {
             let h = x - player.x;
             let v = y - player.y;
             let proximity = Math.sqrt(h * h + v * v);
             if (proximity < 50) {
-                controller.resetGame();
+                controller.playerHasCrashed();
             }
         }
     },
 
     player: {
+        livesInitial: 3,
+        lives: null,
         step: 50,
         sprites: [
             'images/char-boy.png',
@@ -142,7 +160,11 @@ const model = {
             38: 'up',
             39: 'right',
             40: 'down'
-        }
+        },
+        roundsMax: 10,
+        roundInitial: 1,
+        round: null,
+        status: 'start'
     }
 
 };
@@ -156,11 +178,101 @@ const controller = {
         model.init();
         view.init();
     },
-    resetGame: function() {
-        alert('CRASH!');
+    playerHasMoved: function() {
+        //console.log(player.x + ' | ' + player.y);
+        view.sounds['step'].play();
+        if (player.y <= -46) {
+            this.increaseRound();
+        }
+    },
+    playerHasCrashed: function () {
+        view.sounds['hit'].play();
+        this.resetPlayerPosition();
+        this.decreaseLives();
+        
+    },
+    resetPlayerPosition: function () {
         player.x = model.game.boundaries.centerX;
         player.y = model.game.boundaries.bottom;
-    }
+    },
+    resetGame: function() {
+        view.resetSpeedMusic();
+        this.resetRandomSpeed();
+        this.resetLives();
+        this.resetRound();
+        this.resetPlayerPosition();
+    },
+    getLives: function () {
+        return model.player.lives;
+    },
+    increaseLives: function () {
+        model.player.lives += 1;
+        view.renderLives();
+    },
+    decreaseLives: function () {
+        if(model.player.lives>0) {
+            model.player.lives -= 1;
+            view.renderLives();
+        } else {
+            this.initFailure();
+        } 
+    },
+    resetLives: function () {
+        model.player.lives = model.player.livesInitial;
+        view.renderLives();
+    },
+    getRound: function () {
+        return model.game.round;
+    },
+    getRoundsMax: function () {
+        return model.game.roundsMax;
+    },
+    increaseRound: function () {
+        if (model.game.round < model.game.roundsMax) {
+            model.game.round += 1;
+            view.renderRound();
+            this.increaseRandomSpeed();
+            this.resetPlayerPosition();
+        } else {
+            setTimeout(function () { controller.initVictory(); }, 1000);
+        }
+    },
+    decreaseRound: function () {
+        model.game.round -= 1;
+        view.renderRound();
+    },
+    resetRound: function () {
+        model.game.round = model.game.roundInitial;
+        view.renderRound();
+    },
+    increaseRandomSpeed: function () {
+        model.enemies.speed.min = model.enemies.speed.minInitial + model.enemies.speed.increaseAmount;
+        model.enemies.speed.max = model.enemies.speed.maxInitial + model.enemies.speed.increaseAmount;
+    },
+    resetRandomSpeed: function () {
+        model.enemies.speed.min = model.enemies.speed.minInitial;
+        model.enemies.speed.max = model.enemies.speed.maxInitial;
+    },
+    initVictory: function () {
+        view.sounds['victory'].play();
+        swal({
+            title: 'Victory',
+            text: 'You did it. Now do it again.',
+            type: 'success',
+            backdrop: '#4e66d2'
+        });
+        this.resetGame();
+    },
+    initFailure: function () {
+        view.sounds['failure'].play();
+        swal({
+            title: 'Game Over',
+            text:'The bugs got you. Try again.',
+            type: 'error',
+            backdrop: '#262a4f'
+        });
+        this.resetGame();
+    },
 };
 
 /* 
@@ -169,10 +281,76 @@ const controller = {
 
 const view = {
     init: function () {
+
+        /* store pointers to DOM elements */
+
+        this.lives = document.querySelector('.lives');
+        this.round = document.querySelector('.round');
+        this.roundsMax = document.querySelector('.roundsMax');
+
+        /* add event listeners */
+
         document.addEventListener('keyup', function (e) {
             player.handleInput(model.game.allowedKeys[e.keyCode]);
         });
-    }
+
+        /* prepare audio */
+
+        const audioPath = '../audio/';
+
+        this.sounds = {
+            path: '../audio/',
+            step: new Howl({
+                src: [audioPath + 'step.webm', audioPath + 'step.mp3', audioPath + 'step.wav'],
+            }),
+            background: new Howl({
+                src: [audioPath + 'background.webm', audioPath + 'background.mp3', audioPath + 'background.wav'],
+                loop: true,
+                autoplay: true,
+                volume: 0
+            }),
+            hit: new Howl({
+                src: [audioPath + 'hit.webm', audioPath + 'hit.mp3', audioPath + 'hit.wav'],
+                volume: 0.6
+            }),
+            failure: new Howl({
+                src: [audioPath + 'failure.webm', audioPath + 'failure.mp3', audioPath + 'failure.wav']
+            }),
+            victory: new Howl({
+                src: [audioPath + 'victory.webm', audioPath + 'victory.mp3', audioPath + 'victory.wav']
+            })
+        };
+
+        /* render elements */
+
+        this.renderAll();
+
+        /* fade in background music on start */
+
+        this.sounds['background'].fade(0, 0.3, 6000);
+
+    },
+
+    renderLives: function () {      
+        this.lives.className = 'lives lives--count-' + controller.getLives();
+    },
+
+    renderRound: function () {
+        const round = controller.getRound();
+        this.round.textContent = round;
+        this.sounds['background'].rate(1 + (round-1)*0.01);
+        this.roundsMax.textContent = controller.getRoundsMax();
+    },
+
+    renderAll: function () {
+        this.renderLives();
+        this.renderRound();
+    },
+
+    resetSpeedMusic: function () {
+        this.sounds['background'].rate(1);
+    },
+
 };
 
 /* 
@@ -180,6 +358,54 @@ const view = {
  */
 
 controller.init();
+
+
+
+/*
+ * HELPER FUNCTIONS
+ */
+
+// shuffle function from http://stackoverflow.com/a/2450976
+
+function shuffle(array) {
+    var currentIndex = array.length,
+        temporaryValue, randomIndex;
+    while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+    }
+    return array;
+}
+
+// class helpers from https://jaketrent.com/post/addremove-classes-raw-javascript/
+
+function hasClass(el, className) {
+    if (el.classList) {
+        return el.classList.contains(className);
+    } else {
+        return !!el.className.match(new RegExp('(\\s|^)' + className + '(\\s|$)'));
+    }
+}
+
+function addClass(el, className) {
+    if (el.classList) {
+        el.classList.add(className);
+    } else if (!hasClass(el, className)) {
+        el.className += ' ' + className;
+    }
+}
+
+function removeClass(el, className) {
+    if (el.classList) {
+        el.classList.remove(className);
+    } else if (hasClass(el, className)) {
+        var reg = new RegExp('(\\s|^)' + className + '(\\s|$)');
+        el.className = el.className.replace(reg, ' ');
+    }
+}
 
 
 

@@ -34,6 +34,8 @@
         "ctx": false,
         "Resources": false,
         "player": false,
-        "_": false
+        "_": false,
+        "Howl": false,
+        "swal": false
     }
 }
