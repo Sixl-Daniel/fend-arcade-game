@@ -29,7 +29,7 @@ Change to a folder you want the game in. Then clone the files of this repo to a 
     ```
 3. **Start your web server**
     ```
-    http-server
+    $ http-server
     ```
 5. **Point your browser to your local website**  
 Open your browse and go to http://127.0.0.1:8080 to start the game.  
