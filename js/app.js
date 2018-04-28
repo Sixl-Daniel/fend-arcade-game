@@ -49,7 +49,6 @@ const model = {
 
         Player.prototype.update = function(dt) {
             this.speed * dt;
-            // console.log(this.x + ' | ' + this.y);
         };
 
         Player.prototype.render = function() {
@@ -179,7 +178,6 @@ const controller = {
         view.init();
     },
     playerHasMoved: function() {
-        //console.log(player.x + ' | ' + player.y);
         view.sounds['step'].play();
         if (player.y <= -46) {
             this.increaseRound();
@@ -320,7 +318,7 @@ const view = {
             })
         };
 
-        /* render elements */
+        /* render all elements on init */
 
         this.renderAll();
 
@@ -329,6 +327,10 @@ const view = {
         this.sounds['background'].fade(0, 0.3, 6000);
 
     },
+
+    /*
+     * render functions
+     */
 
     renderLives: function () {      
         this.lives.className = 'lives lives--count-' + controller.getLives();
@@ -345,6 +347,10 @@ const view = {
         this.renderLives();
         this.renderRound();
     },
+
+    /*
+     * audio functions
+     */
 
     resetSpeedMusic: function () {
         this.sounds['background'].rate(1);
