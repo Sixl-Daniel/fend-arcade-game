@@ -176,7 +176,11 @@ const model = {
             37: 'left',
             38: 'up',
             39: 'right',
-            40: 'down'
+            40: 'down',
+            65: 'left',
+            87: 'up',
+            68: 'right',
+            83: 'down'
         },
         roundsMax: 10,
         roundInitial: 1,
@@ -250,7 +254,7 @@ const controller = {
             this.increaseRandomSpeed();
             this.resetPlayerPosition();
         } else {
-            setTimeout(function () { controller.initVictory(); }, 1000);
+            setTimeout(function () { controller.initVictory(); }, 800);
         }
     },
     decreaseRound: function () {
