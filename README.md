@@ -38,6 +38,11 @@ Change to a folder you want the game in. Then clone the files of this repo to a 
     ```
 5. **Point your browser to your local website**  
 Open your browse and go to http://127.0.0.1:8080 to start the game.  
+
+## How to play the game
+The goal of the game is to reach the water on the other side ten times (rounds), while avoiding collisions with the bugs. For every collision you loose one of your three lives (indicated by heart-symbols: ❤️). If you collide with a bug and you have no heart left, you loose! The speed of the bugs increases with every round.
+To move your character use **``Up``**, **``Down``**, **``Left``**, **``Right``** (⬆️⬇️⬅️➡️) or **``w``**, **``s``**, **``a``**, **``d``** keys on your keyboard.
+
 ## Resources
 
 ### Libraries
