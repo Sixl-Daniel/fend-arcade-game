@@ -4,7 +4,7 @@
 class GameModel {
 
     constructor() {
-        this.numberEnemies = 12;
+        this.numberEnemies = 13;
         this.roundsMax = 10;
         this.roundInitial = 1;
         this.round = null;
@@ -33,24 +33,24 @@ class GameView {
     }
 
     init() {
-        // this.renderAll();
+        this.renderAll();
     }
 
     /* render methods */
 
-    // renderLives() {
-    //         this.lives.className = 'lives lives--count-' + gameController.getLives();
-    // }
+    renderLives() {
+        this.lives.className = 'lives lives--count-' + gameController.getPlayerLives();
+    }
 
-    // renderRound() {
-    //     this.round.textContent = gameController.getRound();
-    //     this.roundsMax.textContent = gameController.getRoundsMax();
-    // }
+    renderRound() {
+        this.round.textContent = gameController.getRound();
+        this.roundsMax.textContent = gameController.getRoundsMax();
+    }
 
-    // renderAll() {
-    //     this.renderLives();
-    //     this.renderRound();
-    // }
+    renderAll() {
+        this.renderLives();
+        this.renderRound();
+    }
 
 }
 
@@ -64,85 +64,118 @@ class GameController {
     }
 
     init() {
+        this.audio = Audio.createAudio();
+        this.enemies = Enemy.createEnemies(this.model.numberEnemies);
+        this.player = Player.createPlayer();
         this.model.init();
         this.view.init();
-        this.audio = new Audio;
-        this.enemies = Enemy.makeEnemies(this.model.numberEnemies);
-        this.player = Player.makePlayer();
-        console.log(this.player);
-        debugger;
+        // debugger;
     }
 
     handleInput(keycode) {
         const direction =
             keycode == 37 || keycode == 65 ? 'left' :
-            keycode == 38 || keycode == 87 ? 'up' :
-            keycode == 39 || keycode == 68 ? 'right' :
-            keycode == 40 || keycode == 83 ? 'down' : null;
+                keycode == 38 || keycode == 87 ? 'up' :
+                    keycode == 39 || keycode == 68 ? 'right' :
+                        keycode == 40 || keycode == 83 ? 'down' : null;
         if(direction) {
             this.audio.step();
             this.player.move(direction);
+            this.playerMoveOccured();
         }    
     }
 
-    dispatchCollision() {
+    /* events */
+
+    playerCollisionOccured() {
+        this.decreasePlayerLives();
         this.audio.hit();
-        this.decreaseLives();
-        this.player.reset();
+        this.player.resetCoordinates();
+    }
+
+    playerMoveOccured() {
+        const that = this;
+        if (this.player._y <= this.player._boundaries.topMaxWin) {
+            if (this.model.round < this.model.roundsMax) {
+                this.model.round += 1;
+                this.view.renderRound();
+                this.audio.yes();
+                this.player.resetCoordinates();
+            } else {
+                setTimeout(function () {
+                    that.initVictory();
+                }, 300);
+            }
+        }
+    }
+
+    /* reset all */
+
+    resetGame() {
+        this.resetRound();
+        this.player.resetLives();
+        this.player.resetCoordinates();
+        this.view.renderAll();
     }
 
     /* lives */
 
-    // getLives() {
-    //     return this.player._lives;
-    // }
+    getPlayerLives() {
+        return this.player._lives;
+    }
 
-    // increaseLives() {
-    //     this.player._lives += 1;
-    //     view.renderLives();
-    // }
+    increasePlayerLives() {
+        this.player._lives += 1;
+        this.view.renderLives();
+    }
 
-    // decreaseLives() {
-    //     if(player._lives > 0) {
-    //         player._lives -= 1;
-    //         view.renderLives();
-    //     } else {
-    //         //this.initFailure();
-    //     }
-    // }
+    decreasePlayerLives() {
+        if(this.player._lives > 0) {
+            this.player._lives -= 1;
+            this.view.renderLives();
+        } else {
+            this.initFailure();
+        }
+    }
 
     /* rounds */
 
-    // getRound() {
-    //     return this.model.round;
-    // }
+    getRound() {
+        return this.model.round;
+    }
 
-    // getRoundsMax() {
-    //     return this.model.roundsMax;
-    // }
+    getRoundsMax() {
+        return this.model.roundsMax;
+    }
 
-    // increaseRound() {
-    //     if (this.model.round < this.model.roundsMax) {
-    //         this.model.round += 1;
-    //         view.renderRound();
-    //         // TODO this.increaseRandomSpeed();
-    //         this.player.reset();
-    //     } else {
-    //         setTimeout(function () {
-    //             // TODO controller.initVictory();
-    //         }, 800);
-    //     }
-    // }
+    resetRound() {
+        this.model.round = this.model.roundInitial;
+        this.view.renderRound();
+    }
 
-    // decreaseRound() {
-    //     this.model.round -= 1;
-    //     view.renderRound();
-    // }
+    /* failure & victory */
 
-    // resetRound() {
-    //     this.model.round = this.model.roundInitial;
-    //     view.renderRound();
-    // }
+    initVictory() {
+        this.audio.victory();
+        swal({
+            title: 'Victory',
+            text: 'You did it. Now do it again.',
+            type: 'success',
+            backdrop: '#4e66d2'
+        });
+        this.resetGame();
+    }
+        
+    initFailure() {
+        this.audio.failure();
+        swal({
+            title: 'Game Over',
+            text: 'The bugs got you. Try again.',
+            type: 'error',
+            backdrop: '#262a4f'
+        });
+        this.resetGame();
+    }
 
 }
 
@@ -194,8 +227,9 @@ class Player extends Character {
             left: 20,
             right: 384,
             bottom: 404,
-            centerX: 202
-        }
+            centerX: 202,
+            topMaxWin: -40
+        };
 
         this._x = this._boundaries.centerX;
         this._y = this._boundaries.bottom;
@@ -212,21 +246,27 @@ class Player extends Character {
         this._step * dt;
     }
 
+    resetLives() {
+        this._lives = this._livesInitial;
+    }
+
+    /* player coordinates */
+
     pushAside() {
         this._x += _.random(5, 20);
         this._y += _.random(-10, 10);
     }
 
-    reset() {
+    resetCoordinates() {
         this._x = this._boundaries.centerX;
         this._y = this._boundaries.bottom;
     }
 
     getCoordinates() {
-      return {
-          x: this._x,
-          y: this._y
-      }
+        return {
+            x: this._x,
+            y: this._y
+        };
     }
 
     move(direction) {
@@ -241,7 +281,9 @@ class Player extends Character {
         }
     }
 
-    static makePlayer() {
+    /* create */
+
+    static createPlayer() {
         return new Player();
     }
 
@@ -285,13 +327,13 @@ class Enemy extends Character {
         this._speed = {
             minInitial: 40,
             maxInitial: 150,
-            increaseAmount: 100,
+            increaseAmount: 20,
             min: null,
             max: null,
             current: null
         };
 
-        this.init()
+        this.init();
 
     }
 
@@ -312,39 +354,31 @@ class Enemy extends Character {
     }
 
     randomize() {
-        this._x = this.getRandomStartPositionX();
-        this._y = this.getRandomStartPositionY();
-        this._speed.current = this.getRandomSpeed();
+        this._x = this._position.startX + _.random(this._position.factorXMin, this._position.factorXMax) * this._position.startX;
+        this._y = _.random(this._position.minY, this._position.maxY);
+        this._speed.current = _.random(this._speed.min, this._speed.max) + gameController.getRound() * this._speed.increaseAmount;
     }
 
     checkCollision() {
+        const bug = this;
         const dh = this._x - player.getCoordinates().x;
         const dv = this._y - player.getCoordinates().y;
         const proximity = Math.sqrt(dh * dh + dv * dv);
         if (proximity < this._collisionDistance) {
             this._speed.current = this._speed.min;
-            gameController.dispatchCollision();
+            setTimeout(function () {
+                bug._speed.current = 1000;
+            }, 600);
+            gameController.playerCollisionOccured();
         }
     }
 
-    getRandomStartPositionX() {
-        return this._position.startX + _.random(this._position.factorXMin, this._position.factorXMax) * this._position.startX;
-    }
-
-    getRandomStartPositionY() {
-        return _.random(this._position.minY, this._position.maxY);
-    }
-
-    getRandomSpeed() {
-        return _.random(this._speed.min, this._speed.max);
-    }
-
-    static makeEnemies(number) {
+    static createEnemies(number) {
         const enemyCue = [];
         for (let enemy = 0; enemy < number; ++enemy) {
             enemyCue[enemy] = new Enemy();
         }
-       return enemyCue;
+        return enemyCue;
     }
 
 }
@@ -363,15 +397,18 @@ class Audio {
         this._volumeCollision = 0.5;
         this._volumeGameEnd = 0.8;
 
+        this._music = new Howl({
+            src: [this._audioPath + 'background.webm', this._audioPath + 'background.mp3', this._audioPath + 'background.wav'],
+            loop: true,
+            volume: 0
+        });
+
         this._sounds = {
             step: new Howl({
                 src: [this._audioPath + 'step.webm', this._audioPath + 'step.mp3', this._audioPath + 'step.wav'],
             }),
-            background: new Howl({
-                src: [this._audioPath + 'background.webm', this._audioPath + 'background.mp3', this._audioPath + 'background.wav'],
-                loop: true,
-                autoplay: true,
-                volume: 0
+            yes: new Howl({
+                src: [this._audioPath + 'yes.webm', this._audioPath + 'yes.mp3', this._audioPath + 'yes.wav'],
             }),
             hit: new Howl({
                 src: [this._audioPath + 'hit.webm', this._audioPath + 'hit.mp3', this._audioPath + 'hit.wav'],
@@ -392,6 +429,7 @@ class Audio {
     }
 
     init() {
+        this.playMusic();
         this.fadeMusicIn();
     }
 
@@ -399,6 +437,10 @@ class Audio {
 
     step() {
         this._sounds.step.play();
+    }
+
+    yes() {
+        this._sounds.yes.play();
     }
 
     hit() {
@@ -415,24 +457,30 @@ class Audio {
 
     /* methods background music */
 
+    playMusic() {
+        this._music.play();
+    }
+
     fadeMusicIn() {
-        this._sounds.background.fade(0, this._volumeBackgroundMusic, 6000);
+        this._music.fade(0, this._volumeBackgroundMusic, 6000);
+    }
+
+    fadeMusicInFast() {
+        this._music.fade(0, this._volumeBackgroundMusic, 1000);
     }
 
     fadeMusicOut() {
-        this._sounds.background.fade(this._volumeBackgroundMusic, 0, 6000);
+        this._music.fade(this._volumeBackgroundMusic, 0, 6000);
     }
 
     fadeMusicOutFast() {
-        this._sounds.background.fade(this._volumeBackgroundMusic, 0, 1000);
+        this._music.fade(this._volumeBackgroundMusic, 0, 1000);
     }
 
-    setSpeedMusic(round) {
-        this._sounds.background.rate(1 + (round - 1) * 0.01);
-    }
+    /* create */
 
-    resetSpeedMusic() {
-        this._sounds['background'].rate(1);
+    static createAudio() {
+        return new Audio();
     }
 
 }

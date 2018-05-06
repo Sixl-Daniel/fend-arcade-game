@@ -4,7 +4,6 @@
 
 **PERKS**
 - Use of audio files for events
-- Game is changing speed of background audio with every round
 - Random enemy and player sprites
 
 ## Getting started
@@ -81,6 +80,10 @@ Licensed under [Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](http
 - failure.mp3 / failure.wav / failure.webm  
 [orangefreesounds.com/cartoon-failure-trumpet](http://www.orangefreesounds.com/cartoon-failure-trumpet/)  
 Licensed under [Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/)
+
+- yes.mp3 / yes.wav / yes.webm  
+[http://www.soundgator.com/audios/574/man-saying-yes-01-sound-effect](http://www.soundgator.com/audios/574/man-saying-yes-01-sound-effect)  
+Licence: [soundgator.com - user licence](http://www.soundgator.com/userlicense.php)
 
 ### Generators
 
