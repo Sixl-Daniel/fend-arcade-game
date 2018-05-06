@@ -1,112 +1,301 @@
-/* 
- * GAME — MODEL
- */
+/*
+ * Game
+ *******************/
+class GameModel {
 
-const model = {
-    
-    init: function() {
+    constructor() {
+        this.numberEnemies = 13;
+        this.roundsMax = 10;
+        this.roundInitial = 1;
+        this.round = null;
+    }
 
-        /*
-         * set initial model values
-         */
+    init() {
+        this.round = this.roundInitial;
+    }
 
-        this.game.round = this.game.roundInitial;
-        this.player.lives = this.player.livesInitial;
-        this.enemies.speed.min = this.enemies.speed.minInitial;
-        this.enemies.speed.max = this.enemies.speed.maxInitial;
+}
 
-        /* 
-         * character entities
-         */
+class GameView {
 
-        // enemies
+    constructor() {
 
-        const Enemy = function() {
-            model.enemies.randomize(this);
-            this.sprite = model.enemies.getRandomSprite();
-        };
+        // store pointers to DOM elements
+        this.lives = document.querySelector('.lives');
+        this.round = document.querySelector('.round');
+        this.roundsMax = document.querySelector('.roundsMax');
 
-        Enemy.prototype.update = function(dt) {
-            if (this.x > model.enemies.position.endX) {
-                model.enemies.randomize(this);
+        // add event listeners
+        document.addEventListener('keyup', function (e) {
+            gameController.handleInput(e.keyCode);
+        });
+
+    }
+
+    init() {
+        this.renderAll();
+    }
+
+    /* render methods */
+
+    renderLives() {
+        this.lives.className = 'lives lives--count-' + gameController.getPlayerLives();
+    }
+
+    renderRound() {
+        this.round.textContent = gameController.getRound();
+        this.roundsMax.textContent = gameController.getRoundsMax();
+    }
+
+    renderAll() {
+        this.renderLives();
+        this.renderRound();
+    }
+
+}
+
+class GameController {
+
+    constructor(model, view) {
+        this.model = model;
+        this.view = view;
+        this.enemies = [];
+        this.player = null;
+    }
+
+    init() {
+        this.audio = Audio.createAudio();
+        this.enemies = Enemy.createEnemies(this.model.numberEnemies);
+        this.player = Player.createPlayer();
+        this.model.init();
+        this.view.init();
+        // debugger;
+    }
+
+    handleInput(keycode) {
+        const direction =
+            keycode == 37 || keycode == 65 ? 'left' :
+                keycode == 38 || keycode == 87 ? 'up' :
+                    keycode == 39 || keycode == 68 ? 'right' :
+                        keycode == 40 || keycode == 83 ? 'down' : null;
+        if(direction) {
+            this.audio.step();
+            this.player.move(direction);
+            this.playerMoveOccured();
+        }    
+    }
+
+    /* events */
+
+    playerCollisionOccured() {
+        this.decreasePlayerLives();
+        this.audio.hit();
+        this.player.resetCoordinates();
+    }
+
+    playerMoveOccured() {
+        const that = this;
+        if (this.player._y <= this.player._boundaries.topMaxWin) {
+            if (this.model.round < this.model.roundsMax) {
+                this.model.round += 1;
+                this.view.renderRound();
+                this.audio.yes();
+                this.player.resetCoordinates();
             } else {
-                this.x += this.speed * dt;
-                model.enemies.checkPlayerPosition(this.x, this.y);
+                setTimeout(function () {
+                    that.initVictory();
+                }, 300);
             }
-        };
-
-        Enemy.prototype.render = function() {
-            ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-        };
-
-        // player
-
-        const Player = function() {
-            this.x = model.game.boundaries.centerX;
-            this.y = model.game.boundaries.bottom;
-            this.sprite = model.player.getRandomSprite();
-        };
-
-        Player.prototype.update = function(dt) {
-            this.speed * dt;
-        };
-
-        Player.prototype.render = function() {
-            ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-        };
-
-        Player.prototype.handleInput = function(direction) {
-            if (direction == 'left' && this.x > model.game.boundaries.left) {
-                this.x -= model.player.step;
-                controller.playerHasMoved();
-            } else if (direction == 'right' && this.x < model.game.boundaries.right) {
-                this.x += model.player.step;
-                controller.playerHasMoved();
-            } else if (direction == 'up' && this.y > model.game.boundaries.top) {
-                this.y -= model.player.step;
-                controller.playerHasMoved();
-            } else if (direction == 'down' && this.y < model.game.boundaries.bottom) {
-                this.y += model.player.step;
-                controller.playerHasMoved();
-            }
-        };
-
-        /* 
-         * instanciate global model entities 
-         */
-
-        function makeEnemies(number) {
-            const allEnemies = [];
-            for (let i = 0; i < number; ++i) {
-                allEnemies[i] = new Enemy();
-            }
-            return allEnemies;
         }
+    }
 
-        window.allEnemies = makeEnemies(model.enemies.number);
-        window.player = new Player();
+    /* reset all */
 
-    },
+    resetGame() {
+        this.resetRound();
+        this.player.resetLives();
+        this.player.resetCoordinates();
+        this.view.renderAll();
+    }
 
-    enemies: {
-        number: 12,
-        position: {
-            startX: -105,
-            endX: 505,
-            factorXMin: 1.5,
-            factorXMax: 15,
-            minY: 50,
-            maxY: 300
-        },
-        speed: {
-            minInitial: 40,
-            maxInitial: 160,
-            min: null,
-            max: null,
-            increaseAmount: 100
-        },
-        sprite: 'images/enemy-bug-0.png',
-        sprites: [
+    /* lives */
+
+    getPlayerLives() {
+        return this.player._lives;
+    }
+
+    increasePlayerLives() {
+        this.player._lives += 1;
+        this.view.renderLives();
+    }
+
+    decreasePlayerLives() {
+        if(this.player._lives > 0) {
+            this.player._lives -= 1;
+            this.view.renderLives();
+        } else {
+            this.initFailure();
+        }
+    }
+
+    /* rounds */
+
+    getRound() {
+        return this.model.round;
+    }
+
+    getRoundsMax() {
+        return this.model.roundsMax;
+    }
+
+    resetRound() {
+        this.model.round = this.model.roundInitial;
+        this.view.renderRound();
+    }
+
+    /* failure & victory */
+
+    initVictory() {
+        this.audio.victory();
+        swal({
+            title: 'Victory',
+            text: 'You did it. Now do it again.',
+            type: 'success',
+            backdrop: '#4e66d2'
+        });
+        this.resetGame();
+    }
+        
+    initFailure() {
+        this.audio.failure();
+        swal({
+            title: 'Game Over',
+            text: 'The bugs got you. Try again.',
+            type: 'error',
+            backdrop: '#262a4f'
+        });
+        this.resetGame();
+    }
+
+}
+
+/*
+ * Game characters
+ *******************/
+
+class Character {
+
+    constructor() {
+        this._x = 0;
+        this._y = 0;
+    }
+
+    render() {
+        ctx.drawImage(Resources.get(this._sprite), this._x, this._y);
+    }
+
+    getRandomSprite() {
+        return this._sprites[_.random(0, this._sprites.length - 1)];
+    }
+
+}
+
+class Player extends Character {
+
+    constructor() {
+
+        super();
+
+        this._livesInitial = 3;
+                    
+        this._lives = null;
+
+        this._step = 50;
+
+        this._sprites = [
+            'images/char-boy.png',
+            'images/char-cat-girl.png',
+            'images/char-horn-girl.png',
+            'images/char-pink-girl.png',
+            'images/char-princess-girl.png'
+        ];
+
+        this._sprite = this.getRandomSprite();
+
+        this._boundaries = {
+            top: -20,
+            left: 20,
+            right: 384,
+            bottom: 404,
+            centerX: 202,
+            topMaxWin: -40
+        };
+
+        this._x = this._boundaries.centerX;
+        this._y = this._boundaries.bottom;
+
+        this.init();
+
+    }
+
+    init() {
+        this._lives = this._livesInitial;
+    }
+
+    update(dt) {
+        this._step * dt;
+    }
+
+    resetLives() {
+        this._lives = this._livesInitial;
+    }
+
+    /* player coordinates */
+
+    pushAside() {
+        this._x += _.random(5, 20);
+        this._y += _.random(-10, 10);
+    }
+
+    resetCoordinates() {
+        this._x = this._boundaries.centerX;
+        this._y = this._boundaries.bottom;
+    }
+
+    getCoordinates() {
+        return {
+            x: this._x,
+            y: this._y
+        };
+    }
+
+    move(direction) {
+        if (direction == 'left' && this._x > this._boundaries.left) {
+            this._x -= this._step;
+        } else if (direction == 'right' && this._x < this._boundaries.right) {
+            this._x += this._step;
+        } else if (direction == 'up' && this._y > this._boundaries.top) {
+            this._y -= this._step;
+        } else if (direction == 'down' && this._y < this._boundaries.bottom) {
+            this._y += this._step;
+        }
+    }
+
+    /* create */
+
+    static createPlayer() {
+        return new Player();
+    }
+
+}
+
+class Enemy extends Character {
+
+    constructor() {
+
+        super();
+
+        this._sprites = [
             'images/enemy-bug-0.png',
             'images/enemy-bug-1.png',
             'images/enemy-bug-2.png',
@@ -120,314 +309,188 @@ const model = {
             'images/enemy-bug-10.png',
             'images/enemy-bug-11.png',
             'images/enemy-bug-12.png',
-        ],
-        getRandomSprite: function () {
-            return model.enemies.sprites[_.random(0, model.enemies.sprites.length - 1)];
-        },
-        getRandomStartPositionY: function() {
-            return _.random(model.enemies.position.minY, model.enemies.position.maxY);
-        },
-        getRandomStartPositionX: function() {
-            return model.enemies.position.startX + _.random(model.enemies.position.factorXMin, model.enemies.position.factorXMax) * model.enemies.position.startX;
-        },
-        getRandomSpeed: function() {
-            return _.random(model.enemies.speed.min, model.enemies.speed.max);
-        },
-        randomize: function(object) {
-            object.x = model.enemies.getRandomStartPositionX();
-            object.y = model.enemies.getRandomStartPositionY();
-            object.speed = model.enemies.getRandomSpeed();
-        },
-        checkPlayerPosition: function(x, y) {
-            let h = x - player.x;
-            let v = y - player.y;
-            let proximity = Math.sqrt(h * h + v * v);
-            if (proximity < 50) {
-                controller.playerHasCrashed();
-            }
-        }
-    },
+        ];
 
-    player: {
-        livesInitial: 3,
-        lives: null,
-        step: 50,
-        sprites: [
-            'images/char-boy.png',
-            'images/char-cat-girl.png',
-            'images/char-horn-girl.png',
-            'images/char-pink-girl.png',
-            'images/char-princess-girl.png'
-        ],
-        getRandomSprite: function() {
-            return model.player.sprites[_.random(0, model.player.sprites.length - 1)];
-        }
-    },
+        this._sprite = this.getRandomSprite();
 
-    game: {
-        boundaries: {
-            top: -20,
-            left: 20,
-            right: 384,
-            bottom: 404,
-            centerX: 202
-        },
-        allowedKeys: {
-            37: 'left',
-            38: 'up',
-            39: 'right',
-            40: 'down',
-            65: 'left',
-            87: 'up',
-            68: 'right',
-            83: 'down'
-        },
-        roundsMax: 10,
-        roundInitial: 1,
-        round: null,
-        status: 'start'
+        this._position = {
+            startX: -105,
+            endX: 505,
+            factorXMin: 1.1,
+            factorXMax: 15,
+            minY: 50,
+            maxY: 320
+        };
+
+        this._collisionDistance = 50;
+
+        this._speed = {
+            minInitial: 40,
+            maxInitial: 150,
+            increaseAmount: 20,
+            min: null,
+            max: null,
+            current: null
+        };
+
+        this.init();
+
     }
 
-};
+    init() {
+        this._speed.min = this._speed.minInitial;
+        this._speed.max = this._speed.maxInitial;
+        this._speed.current = this._speed.minInitial;
+        this.randomize();
+    }
 
-/* 
- * GAME — CONTROLLER
- */
-
-const controller = {
-    init: function() {
-        model.init();
-        view.init();
-    },
-    playerHasMoved: function() {
-        view.sounds['step'].play();
-        if (player.y <= -46) {
-            this.increaseRound();
-        }
-    },
-    playerHasCrashed: function () {
-        view.sounds['hit'].play();
-        this.resetPlayerPosition();
-        this.decreaseLives();
-        
-    },
-    resetPlayerPosition: function () {
-        player.x = model.game.boundaries.centerX;
-        player.y = model.game.boundaries.bottom;
-    },
-    resetGame: function() {
-        view.resetSpeedMusic();
-        this.resetRandomSpeed();
-        this.resetLives();
-        this.resetRound();
-        this.resetPlayerPosition();
-    },
-    getLives: function () {
-        return model.player.lives;
-    },
-    increaseLives: function () {
-        model.player.lives += 1;
-        view.renderLives();
-    },
-    decreaseLives: function () {
-        if(model.player.lives>0) {
-            model.player.lives -= 1;
-            view.renderLives();
+    update(dt) {
+        if (this._x > this._position.endX) {
+            this.randomize();
         } else {
-            this.initFailure();
-        } 
-    },
-    resetLives: function () {
-        model.player.lives = model.player.livesInitial;
-        view.renderLives();
-    },
-    getRound: function () {
-        return model.game.round;
-    },
-    getRoundsMax: function () {
-        return model.game.roundsMax;
-    },
-    increaseRound: function () {
-        if (model.game.round < model.game.roundsMax) {
-            model.game.round += 1;
-            view.renderRound();
-            this.increaseRandomSpeed();
-            this.resetPlayerPosition();
-        } else {
-            setTimeout(function () { controller.initVictory(); }, 800);
+            this._x += this._speed.current * dt;
+            this.checkCollision();
         }
-    },
-    decreaseRound: function () {
-        model.game.round -= 1;
-        view.renderRound();
-    },
-    resetRound: function () {
-        model.game.round = model.game.roundInitial;
-        view.renderRound();
-    },
-    increaseRandomSpeed: function () {
-        model.enemies.speed.min = model.enemies.speed.minInitial + model.enemies.speed.increaseAmount;
-        model.enemies.speed.max = model.enemies.speed.maxInitial + model.enemies.speed.increaseAmount;
-    },
-    resetRandomSpeed: function () {
-        model.enemies.speed.min = model.enemies.speed.minInitial;
-        model.enemies.speed.max = model.enemies.speed.maxInitial;
-    },
-    initVictory: function () {
-        view.sounds['victory'].play();
-        swal({
-            title: 'Victory',
-            text: 'You did it. Now do it again.',
-            type: 'success',
-            backdrop: '#4e66d2'
-        });
-        this.resetGame();
-    },
-    initFailure: function () {
-        view.sounds['failure'].play();
-        swal({
-            title: 'Game Over',
-            text:'The bugs got you. Try again.',
-            type: 'error',
-            backdrop: '#262a4f'
-        });
-        this.resetGame();
-    },
-};
+    }
 
-/* 
- * GAME — VIEW
- */
+    randomize() {
+        this._x = this._position.startX + _.random(this._position.factorXMin, this._position.factorXMax) * this._position.startX;
+        this._y = _.random(this._position.minY, this._position.maxY);
+        this._speed.current = _.random(this._speed.min, this._speed.max) + gameController.getRound() * this._speed.increaseAmount;
+    }
 
-const view = {
-    init: function () {
+    checkCollision() {
+        const bug = this;
+        const dh = this._x - player.getCoordinates().x;
+        const dv = this._y - player.getCoordinates().y;
+        const proximity = Math.sqrt(dh * dh + dv * dv);
+        if (proximity < this._collisionDistance) {
+            this._speed.current = this._speed.min;
+            setTimeout(function () {
+                bug._speed.current = 1000;
+            }, 600);
+            gameController.playerCollisionOccured();
+        }
+    }
 
-        // store pointers to DOM elements
+    static createEnemies(number) {
+        const enemyCue = [];
+        for (let enemy = 0; enemy < number; ++enemy) {
+            enemyCue[enemy] = new Enemy();
+        }
+        return enemyCue;
+    }
 
-        this.lives = document.querySelector('.lives');
-        this.round = document.querySelector('.round');
-        this.roundsMax = document.querySelector('.roundsMax');
+}
 
-        // add event listeners
+/*
+ * Game audio
+ *************************************/
 
-        document.addEventListener('keyup', function (e) {
-            player.handleInput(model.game.allowedKeys[e.keyCode]);
+class Audio {
+
+    constructor() {
+
+        this._audioPath = './audio/';
+
+        this._volumeBackgroundMusic = 0.3;
+        this._volumeCollision = 0.5;
+        this._volumeGameEnd = 0.8;
+
+        this._music = new Howl({
+            src: [this._audioPath + 'background.webm', this._audioPath + 'background.mp3', this._audioPath + 'background.wav'],
+            loop: true,
+            volume: 0
         });
 
-        // prepare audio
-
-        const audioPath = './audio/';
-
-        this.sounds = {
+        this._sounds = {
             step: new Howl({
-                src: [audioPath + 'step.webm', audioPath + 'step.mp3', audioPath + 'step.wav'],
+                src: [this._audioPath + 'step.webm', this._audioPath + 'step.mp3', this._audioPath + 'step.wav'],
             }),
-            background: new Howl({
-                src: [audioPath + 'background.webm', audioPath + 'background.mp3', audioPath + 'background.wav'],
-                loop: true,
-                autoplay: true,
-                volume: 0
+            yes: new Howl({
+                src: [this._audioPath + 'yes.webm', this._audioPath + 'yes.mp3', this._audioPath + 'yes.wav'],
             }),
             hit: new Howl({
-                src: [audioPath + 'hit.webm', audioPath + 'hit.mp3', audioPath + 'hit.wav'],
-                volume: 0.6
+                src: [this._audioPath + 'hit.webm', this._audioPath + 'hit.mp3', this._audioPath + 'hit.wav'],
+                volume: this._volumeCollision
             }),
             failure: new Howl({
-                src: [audioPath + 'failure.webm', audioPath + 'failure.mp3', audioPath + 'failure.wav']
+                src: [this._audioPath + 'failure.webm', this._audioPath + 'failure.mp3', this._audioPath + 'failure.wav'],
+                volume: this._volumeGameEnd
             }),
             victory: new Howl({
-                src: [audioPath + 'victory.webm', audioPath + 'victory.mp3', audioPath + 'victory.wav']
+                src: [this._audioPath + 'victory.webm', this._audioPath + 'victory.mp3', this._audioPath + 'victory.wav'],
+                volume: this._volumeGameEnd
             })
         };
 
-        // render all elements on init
+        this.init();
 
-        this.renderAll();
+    }
 
-        // fade in background music on start
+    init() {
+        this.playMusic();
+        this.fadeMusicIn();
+    }
 
-        this.sounds['background'].fade(0, 0.3, 6000);
+    /* methods sound effects */
 
-    },
+    step() {
+        this._sounds.step.play();
+    }
 
-    /*
-     * render functions
-     */
+    yes() {
+        this._sounds.yes.play();
+    }
 
-    renderLives: function () {      
-        this.lives.className = 'lives lives--count-' + controller.getLives();
-    },
+    hit() {
+        this._sounds.hit.play();
+    }
 
-    renderRound: function () {
-        const round = controller.getRound();
-        this.round.textContent = round;
-        this.sounds['background'].rate(1 + (round-1)*0.01);
-        this.roundsMax.textContent = controller.getRoundsMax();
-    },
+    failure() {
+        this._sounds.failure.play();
+    }
 
-    renderAll: function () {
-        this.renderLives();
-        this.renderRound();
-    },
+    victory() {
+        this._sounds.victory.play();
+    }
 
-    /*
-     * miscellaneous functions
-     */
+    /* methods background music */
 
-    resetSpeedMusic: function () {
-        this.sounds['background'].rate(1);
-    },
+    playMusic() {
+        this._music.play();
+    }
 
-};
+    fadeMusicIn() {
+        this._music.fade(0, this._volumeBackgroundMusic, 6000);
+    }
 
-/* 
- * RUN
- */
+    fadeMusicInFast() {
+        this._music.fade(0, this._volumeBackgroundMusic, 1000);
+    }
 
-controller.init();
+    fadeMusicOut() {
+        this._music.fade(this._volumeBackgroundMusic, 0, 6000);
+    }
+
+    fadeMusicOutFast() {
+        this._music.fade(this._volumeBackgroundMusic, 0, 1000);
+    }
+
+    /* create */
+
+    static createAudio() {
+        return new Audio();
+    }
+
+}
 
 /*
- * HELPER FUNCTIONS
- */
+ * Run
+ *************************************/
 
-/* shuffle function from http://stackoverflow.com/a/2450976 */
+const gameModel = new GameModel;
+const gameView = new GameView;
+const gameController = new GameController(gameModel, gameView);
 
-function shuffle(array) {
-    var currentIndex = array.length,
-        temporaryValue, randomIndex;
-    while (currentIndex !== 0) {
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex -= 1;
-        temporaryValue = array[currentIndex];
-        array[currentIndex] = array[randomIndex];
-        array[randomIndex] = temporaryValue;
-    }
-    return array;
-}
-
-// class helpers from https://jaketrent.com/post/addremove-classes-raw-javascript/
-
-function hasClass(el, className) {
-    if (el.classList) {
-        return el.classList.contains(className);
-    } else {
-        return !!el.className.match(new RegExp('(\\s|^)' + className + '(\\s|$)'));
-    }
-}
-
-function addClass(el, className) {
-    if (el.classList) {
-        el.classList.add(className);
-    } else if (!hasClass(el, className)) {
-        el.className += ' ' + className;
-    }
-}
-
-function removeClass(el, className) {
-    if (el.classList) {
-        el.classList.remove(className);
-    } else if (hasClass(el, className)) {
-        var reg = new RegExp('(\\s|^)' + className + '(\\s|$)');
-        el.className = el.className.replace(reg, ' ');
-    }
-}
+gameController.init();
